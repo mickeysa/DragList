@@ -1,0 +1,13 @@
+{
+  "dbConfig": {
+    "url": "mongodb://api:code4life@ds133876.mlab.com:33876/draglist_dev",
+    "name": "draglist_dev",
+    "port": "33876",
+    "host": "ds133876.mlab.com",
+    "username": "api",
+    "password": "code4life"
+  },
+  "httpPort": 80,
+  "httpsPort": 443,
+  "tcpPort": 41234
+}
