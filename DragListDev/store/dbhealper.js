@@ -13,7 +13,7 @@ exports.connect = function(callback,errorCallback) {
 	var db = mongoose.connection;
 	db.on('error',function(err){//error on connection
 		console.error.bind(console, 'connection error:');
-		Logger.error('Mogooose could not connect db server.');
+		console.error('Mogooose could not connect db server.');
 		if(typeof (errorCallback)=='function'){
 			errorCallback(err)
 		}

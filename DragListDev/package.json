@@ -1,6 +1,6 @@
 {
-  "name": "draglistdev",
-  "version": "0.0.0",
+  "name": "DragListDemo",
+  "version": "0.0.8",
   "private": true,
   "scripts": {
     "start": "node ./bin/www"

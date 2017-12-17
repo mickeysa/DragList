@@ -5,7 +5,8 @@ var mongoose = require('mongoose'),
 var item = new Schema({
     label:{type:String,required:true },
     seq:{type:Number,required:true,default:-1},
-    children:{type:Array,required: false},
+    root:{type:Boolean,required:true,default:false},
+    children:{type:[ObjectId],required: false},
     updateDate: {type: Number, required: false},///date when information updated
     createDate: {type: Number, required: true}
 });
