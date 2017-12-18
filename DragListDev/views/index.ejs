@@ -393,8 +393,14 @@
         function listify(strarr) {
           var l = $("<ol>").addClass("dd-list");
           $.each(strarr, function(i, v) {
+              console.log(v);
+
+              if(v["children"].length>0) {
+                  alert('2');
+              }
+
             var c = $("<li>").addClass("dd-item"),
-                    h = $("<div>").addClass("dd-handle").text("Item " + v["label"]);
+                    h = $("<div>").addClass("dd-handle").text(v["label"]);
             l.append(c.append(h));
             if (!!v["children"])
               c.append(listify(v["children"]));
@@ -404,7 +410,7 @@
 
         var list = listify(tarr);
         $("#test").append(list);
-        console.log(response);
+
       });
 
 
@@ -416,6 +422,7 @@
 <h1>Nestable</h1>
 
 <p>Drag &amp; drop hierarchical list with mouse and touch compatibility (jQuery plugin)</p>
+<textarea id="nestable-output"></textarea>
 <div class="cf nestable-lists">
   <div class="dd" id="nestable">
 
@@ -449,7 +456,7 @@
       var list = e.length ? e : $(e.target),
               output = list.data('output');
       if (window.JSON) {
-       // output.val(window.JSON.stringify(list.nestable('serialize')));//, null, 2));
+       output.val(window.JSON.stringify(list.nestable('serialize')));//, null, 2));
       } else {
         output.val('JSON browser support required for this demo.');
       }
@@ -469,7 +476,7 @@
 
     // output initial serialised data
     updateOutput($('#nestable').data('output', $('#nestable-output')));
-    updateOutput($('#nestable2').data('output', $('#nestable2-output')));
+    //updateOutput($('#nestable2').data('output', $('#nestable2-output')));
 
     $('#nestable-menu').on('click', function (e) {
       var target = $(e.target),

@@ -10,7 +10,7 @@ var aItem = new Item({
 });
 aItem.save(function (err, done) {
 
-});
+});*/
 
 exports.listAll = function (req, res) {
     var _childFinder = function (mItem, callback) {
