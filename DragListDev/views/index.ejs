@@ -374,7 +374,53 @@
   <script>
     $(document).ready(function () {
 
+$('#btnsave').click(function () {
+    var updateOutput = function (e) {
+        var list = e.length ? e : $(e.target),
+            output = list.data('output');
+        if (window.JSON) {
+            output.val(window.JSON.stringify(list.nestable('serialize')));//, null, 2));
+        } else {
+            output.val('JSON browser support required for this demo.');
+        }
+    };
 
+    updateOutput($('#nestable').data('output', $('#nestable-output')));
+    var output_value = $('#nestable-output').val();
+    var data = {order:output_value};
+    console.log(data);
+
+    var settings = {
+        "async": true,
+        "crossDomain": true,
+        "url": "/saveOrder",
+        "method": "POST",
+        "headers": {
+            "Content-Type": "application/json",
+            "Cache-Control": "no-cache"
+        },
+        "processData": false,
+        "data": JSON.stringify(data)
+    }
+
+    $.ajax(settings).done(function (response) {
+        console.log('done');
+    });
+    // $.ajax({
+    //     url: '/saveOrder',
+    //     type: 'post',
+    //     dataType: 'json',
+    //     success: function (data) {
+    //         console.log('Saved');
+    //     },
+    //     error:function (error) {
+    //         console.log(error);
+    //     },
+    //     data:data
+    // });
+
+
+});
 
       var settings = {
         "async": true,
@@ -393,8 +439,8 @@
         function listify(strarr) {
           var l = $("<ol>").addClass("dd-list");
           $.each(strarr, function(i, v) {
-            var c = $("<li>").addClass("dd-item"),
-                    h = $("<div>").addClass("dd-handle").text("Item " + v["label"]);
+            var c = $("<li>").addClass("dd-item").attr( { 'data-id':v["label"], '_id':v["_id"] } );
+                    h = $("<div>").addClass("dd-handle1").text(v["label"]);
             l.append(c.append(h));
             if (!!v["children"])
               c.append(listify(v["children"]));
@@ -403,8 +449,82 @@
         }
 
         var list = listify(tarr);
-        $("#test").append(list);
-        console.log(response);
+        $("#nestable").append(list);
+          $('#nestable ol li div').attr("contenteditable", "true");
+          $('ol li div').on('dblclick',function(){
+              $('ol li div').removeClass('dd-handle1').addClass('dd-handle');
+          });
+          $('ol li div').on('click',function(){
+              $('ol li div').removeClass('dd-handle').addClass('dd-handle1');
+          });
+          $('ol li div').on('blur',function(){
+
+              $(this).closest('li').attr('id',$(this).text());
+              $(this).closest('li').data('label',$(this).text());
+              $(this).closest('li').data('_id',$(this).closest('li').attr('_id'));
+              //updateOutput($('#nestable').data('output', $('#nestable-output')));
+          });
+          $('ol li div').each(function(){
+
+              $(this).closest('li').attr('id',$(this).text());
+              $(this).closest('li').data('label',$(this).text());
+              $(this).closest('li').data('_id',$(this).closest('li').attr('_id'));
+
+          });
+
+          $(".display").click(function(){
+
+              $(this).hide().siblings(".edit").show().val($(this).text()).focus();
+          });
+
+          $(".edit").focusout(function(){
+              $(this).hide().siblings(".display").show().text($(this).val());
+          });
+
+              var updateOutput = function (e) {
+                  var list = e.length ? e : $(e.target),
+                      output = list.data('output');
+                  if (window.JSON) {
+                      output.val(window.JSON.stringify(list.nestable('serialize')));//, null, 2));
+                  } else {
+                      output.val('JSON browser support required for this demo.');
+                  }
+              };
+
+          // activate Nestable for list 1
+          $('#nestable').nestable({
+              group: 1
+          })
+              .on('change', updateOutput);
+
+          // activate Nestable for list 2
+          $('#nestable2').nestable({
+              group: 1
+          })
+              .on('change', updateOutput);
+
+          // output initial serialised data
+          updateOutput($('#nestable').data('output', $('#nestable-output')));
+          //updateOutput($('#nestable2').data('output', $('#nestable2-output')));
+
+          $('#nestable-menu').on('click', function (e) {
+              var target = $(e.target),
+                  action = target.data('action');
+              if (action === 'expand-all') {
+                  $('.dd').nestable('expandAll');
+              }
+              if (action === 'collapse-all') {
+                  $('.dd').nestable('collapseAll');
+              }
+          });
+
+          $('#nestable3').nestable();
+
+          //editabel td items
+
+
+
+
       });
 
 
@@ -416,6 +536,7 @@
 <h1>Nestable</h1>
 
 <p>Drag &amp; drop hierarchical list with mouse and touch compatibility (jQuery plugin)</p>
+<textarea readonly id="nestable-output"></textarea>
 <div class="cf nestable-lists">
   <div class="dd" id="nestable">
 
@@ -423,72 +544,9 @@
 </div>
 <div>
   <input type="button" id="btnsave" value="Save"/>
+    <input type="text" id="saved_item"></input>
 </div>
-<div id="test"></div>
-<script>
+<div id="nestable"></div>
 
-  $(document).ready(function () {
-    $('#nestable ol li div').attr("contenteditable", "true");
-    $('ol li div').on('dblclick',function(){
-      $('ol li div').removeClass('dd-handle1').addClass('dd-handle');
-    });
-    $('ol li div').on('click',function(){
-      $('ol li div').removeClass('dd-handle').addClass('dd-handle1');
-    });
-
-    $(".display").click(function(){
-
-      $(this).hide().siblings(".edit").show().val($(this).text()).focus();
-    });
-
-    $(".edit").focusout(function(){
-      $(this).hide().siblings(".display").show().text($(this).val());
-    });
-
-    var updateOutput = function (e) {
-      var list = e.length ? e : $(e.target),
-              output = list.data('output');
-      if (window.JSON) {
-       // output.val(window.JSON.stringify(list.nestable('serialize')));//, null, 2));
-      } else {
-        output.val('JSON browser support required for this demo.');
-      }
-    };
-
-    // activate Nestable for list 1
-    $('#nestable').nestable({
-      group: 1
-    })
-            .on('change', updateOutput);
-
-    // activate Nestable for list 2
-    $('#nestable2').nestable({
-      group: 1
-    })
-            .on('change', updateOutput);
-
-    // output initial serialised data
-    updateOutput($('#nestable').data('output', $('#nestable-output')));
-    updateOutput($('#nestable2').data('output', $('#nestable2-output')));
-
-    $('#nestable-menu').on('click', function (e) {
-      var target = $(e.target),
-              action = target.data('action');
-      if (action === 'expand-all') {
-        $('.dd').nestable('expandAll');
-      }
-      if (action === 'collapse-all') {
-        $('.dd').nestable('collapseAll');
-      }
-    });
-
-    $('#nestable3').nestable();
-
-    //editabel td items
-
-
-
-  });
-</script>
 </body>
 </html>
