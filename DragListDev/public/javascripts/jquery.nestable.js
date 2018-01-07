@@ -5,7 +5,7 @@
 ;(function($, window, document, undefined)
 {
     var hasTouch = 'ontouchstart' in document;
-
+    var dragged = false;
     /**
      * Detect CSS pointer-events property
      * events are normally disabled on the dragging element to avoid conflicts
@@ -27,23 +27,23 @@
     })();
 
     var defaults = {
-            listNodeName    : 'ol',
-            itemNodeName    : 'li',
-            rootClass       : 'dd',
-            listClass       : 'dd-list',
-            itemClass       : 'dd-item',
-            dragClass       : 'dd-dragel',
-            handleClass     : 'dd-handle',
-            collapsedClass  : 'dd-collapsed',
-            placeClass      : 'dd-placeholder',
-            noDragClass     : 'dd-nodrag',
-            emptyClass      : 'dd-empty',
-            expandBtnHTML   : '<button data-action="expand" type="button">Expand</button>',
-            collapseBtnHTML : '<button data-action="collapse" type="button">Collapse</button>',
-            group           : 0,
-            maxDepth        : 5,
-            threshold       : 20
-        };
+        listNodeName    : 'ol',
+        itemNodeName    : 'li',
+        rootClass       : 'dd',
+        listClass       : 'dd-list',
+        itemClass       : 'dd-item',
+        dragClass       : 'dd-dragel',
+        handleClass     : 'dd-handle',
+        collapsedClass  : 'dd-collapsed',
+        placeClass      : 'dd-placeholder',
+        noDragClass     : 'dd-nodrag',
+        emptyClass      : 'dd-empty',
+        expandBtnHTML   : '<button data-action="expand" type="button">Expand</button>',
+        collapseBtnHTML : '<button data-action="collapse" type="button">Collapse</button>',
+        group           : 0,
+        maxDepth        : 5,
+        threshold       : 20
+    };
 
     function Plugin(element, options)
     {
@@ -70,8 +70,6 @@
             });
 
             list.el.on('click', 'button', function(e) {
-
-
                 if (list.dragEl) {
                     return;
                 }
@@ -131,8 +129,8 @@
                 window.addEventListener('touchend', onEndEvent, false);
                 window.addEventListener('touchcancel', onEndEvent, false);
             }
-            list.el.on('dblclick', onStartEvent);
-            //list.el.on('mousedown', onStartEvent);
+
+            list.el.on('mousedown', onStartEvent);
             list.w.on('mousemove', onMoveEvent);
             list.w.on('mouseup', onEndEvent);
 
@@ -143,22 +141,22 @@
             var data,
                 depth = 0,
                 list  = this;
-                step  = function(level, depth)
+            step  = function(level, depth)
+            {
+                var array = [ ],
+                    items = level.children(list.options.itemNodeName);
+                items.each(function()
                 {
-                    var array = [ ],
-                        items = level.children(list.options.itemNodeName);
-                    items.each(function()
-                    {
-                        var li   = $(this),
-                            item = $.extend({}, li.data()),
-                            sub  = li.children(list.options.listNodeName);
-                        if (sub.length) {
-                            item.children = step(sub, depth + 1);
-                        }
-                        array.push(item);
-                    });
-                    return array;
-                };
+                    var li   = $(this),
+                        item = $.extend({}, li.data()),
+                        sub  = li.children(list.options.listNodeName);
+                    if (sub.length) {
+                        item.children = step(sub, depth + 1);
+                    }
+                    array.push(item);
+                });
+                return array;
+            };
             data = step(list.el.find(list.options.listNodeName).first(), depth);
             return data;
         },
@@ -251,54 +249,26 @@
 
         dragStart: function(e)
         {
-            var mouse    = this.mouse,
-                target   = $(e.target),
-                dragItem = target.closest(this.options.itemNodeName);
-
-            this.placeEl.css('height', dragItem.height());
-
-            mouse.offsetX = e.offsetX !== undefined ? e.offsetX : e.pageX - target.offset().left;
-            mouse.offsetY = e.offsetY !== undefined ? e.offsetY : e.pageY - target.offset().top;
-            mouse.startX = mouse.lastX = e.pageX;
-            mouse.startY = mouse.lastY = e.pageY;
-
-            this.dragRootEl = this.el;
-
             this.dragEl = $(document.createElement(this.options.listNodeName)).addClass(this.options.listClass + ' ' + this.options.dragClass);
-            this.dragEl.css('width', dragItem.width());
-
-            dragItem.after(this.placeEl);
-            dragItem[0].parentNode.removeChild(dragItem[0]);
-            dragItem.appendTo(this.dragEl);
-
-            $(document.body).append(this.dragEl);
-            this.dragEl.css({
-                'left' : e.pageX - mouse.offsetX,
-                'top'  : e.pageY - mouse.offsetY
-            });
-            // total depth of dragging item
-            var i, depth,
-                items = this.dragEl.find(this.options.itemNodeName);
-            for (i = 0; i < items.length; i++) {
-                depth = $(items[i]).parents(this.options.listNodeName).length;
-                if (depth > this.dragDepth) {
-                    this.dragDepth = depth;
-                }
-            }
         },
 
         dragStop: function(e)
         {
-            var el = this.dragEl.children(this.options.itemNodeName).first();
-            el[0].parentNode.removeChild(el[0]);
-            this.placeEl.replaceWith(el);
+            if(dragged){
+                var el = this.dragEl.children(this.options.itemNodeName).first();
+                el[0].parentNode.removeChild(el[0]);
+                this.placeEl.replaceWith(el);
 
-            this.dragEl.remove();
-            this.el.trigger('change');
-            if (this.hasNewRoot) {
-                this.dragRootEl.trigger('change');
+                this.dragEl.remove();
+                this.el.trigger('change');
+                if (this.hasNewRoot) {
+                    this.dragRootEl.trigger('change');
+                }
+                this.reset();
+                dragged = false;
+            }else{
+                this.reset();
             }
-            this.reset();
         },
 
         dragMove: function(e)
@@ -306,7 +276,42 @@
             var list, parent, prev, next, depth,
                 opt   = this.options,
                 mouse = this.mouse;
+            if(!dragged){
+                var target   = $(e.target),
+                    dragItem = target.closest(this.options.itemNodeName);
 
+                this.placeEl.css('height', dragItem.height());
+
+                mouse.offsetX = e.offsetX !== undefined ? e.offsetX : e.pageX - target.offset().left;
+                mouse.offsetY = e.offsetY !== undefined ? e.offsetY : e.pageY - target.offset().top;
+                mouse.startX = mouse.lastX = e.pageX;
+                mouse.startY = mouse.lastY = e.pageY;
+
+                this.dragRootEl = this.el;
+
+                this.dragEl = $(document.createElement(this.options.listNodeName)).addClass(this.options.listClass + ' ' + this.options.dragClass);
+                this.dragEl.css('width', dragItem.width());
+
+                dragItem.after(this.placeEl);
+                dragItem[0].parentNode.removeChild(dragItem[0]);
+                dragItem.appendTo(this.dragEl);
+
+                $(document.body).append(this.dragEl);
+                this.dragEl.css({
+                    'left' : e.pageX - mouse.offsetX,
+                    'top'  : e.pageY - mouse.offsetY
+                });
+                // total depth of dragging item
+                var i, depth,
+                    items = this.dragEl.find(this.options.itemNodeName);
+                for (i = 0; i < items.length; i++) {
+                    depth = $(items[i]).parents(this.options.listNodeName).length;
+                    if (depth > this.dragDepth) {
+                        this.dragDepth = depth;
+                    }
+                }
+            }
+            dragged = true;
             this.dragEl.css({
                 'left' : e.pageX - mouse.offsetX,
                 'top'  : e.pageY - mouse.offsetY
@@ -432,7 +437,7 @@
                     return;
                 }
                 var before = e.pageY < (this.pointEl.offset().top + this.pointEl.height() / 2);
-                    parent = this.placeEl.parent();
+                parent = this.placeEl.parent();
                 // if empty create new list to replace empty placeholder
                 if (isEmpty) {
                     list = $(document.createElement(opt.listNodeName)).addClass(opt.listClass);

@@ -138,16 +138,6 @@
       color: #2ea8e5;
       background: #fff;
     }
-    dd-handle1:hover { color: #2ea8e5; background: #fff; }
-    .dd-handle1 { display: block; height: 30px; margin: 5px 0; padding: 5px 10px; color: #333; text-decoration: none; font-weight: bold; border: 1px solid #ccc;
-      background: #fafafa;
-      background: -webkit-linear-gradient(top, #fafafa 0%, #eee 100%);
-      background:    -moz-linear-gradient(top, #fafafa 0%, #eee 100%);
-      background:         linear-gradient(top, #fafafa 0%, #eee 100%);
-      -webkit-border-radius: 3px;
-      border-radius: 3px;
-      box-sizing: border-box; -moz-box-sizing: border-box;
-    }
 
     .dd-item > button {
       display: block;
@@ -375,6 +365,7 @@
     $(document).ready(function () {
 
 $('#btnsave').click(function () {
+
     var updateOutput = function (e) {
         var list = e.length ? e : $(e.target),
             output = list.data('output');
@@ -387,7 +378,7 @@ $('#btnsave').click(function () {
 
     updateOutput($('#nestable').data('output', $('#nestable-output')));
     var output_value = $('#nestable-output').val();
-    var data = {order:output_value};
+    var data = {order:JSON.parse(output_value)};
     console.log(data);
 
     var settings = {
@@ -405,6 +396,7 @@ $('#btnsave').click(function () {
 
     $.ajax(settings).done(function (response) {
         console.log('done');
+        alert('Saved Successfully');
     });
     // $.ajax({
     //     url: '/saveOrder',
@@ -440,7 +432,7 @@ $('#btnsave').click(function () {
           var l = $("<ol>").addClass("dd-list");
           $.each(strarr, function(i, v) {
             var c = $("<li>").addClass("dd-item").attr( { 'data-id':v["label"], '_id':v["_id"] } );
-                    h = $("<div>").addClass("dd-handle1").text(v["label"]);
+                    h = $("<div>").addClass("dd-handle").text(v["label"]);
             l.append(c.append(h));
             if (!!v["children"])
               c.append(listify(v["children"]));
@@ -450,13 +442,15 @@ $('#btnsave').click(function () {
 
         var list = listify(tarr);
         $("#nestable").append(list);
-          $('#nestable ol li div').attr("contenteditable", "true");
-          $('ol li div').on('dblclick',function(){
-              $('ol li div').removeClass('dd-handle1').addClass('dd-handle');
+          $(".dd-handle").on("dblclick",function(){
+              console.log("hello");
+              $(this).attr("contenteditable",true);
+              $(this).focus();
           });
-          $('ol li div').on('click',function(){
-              $('ol li div').removeClass('dd-handle').addClass('dd-handle1');
+          $(".dd-handle").on("blur",function(){
+              $(this).attr("contenteditable",false);
           });
+
           $('ol li div').on('blur',function(){
 
               $(this).closest('li').attr('id',$(this).text());
@@ -519,12 +513,6 @@ $('#btnsave').click(function () {
           });
 
           $('#nestable3').nestable();
-
-          //editabel td items
-
-
-
-
       });
 
 
@@ -544,9 +532,9 @@ $('#btnsave').click(function () {
 </div>
 <div>
   <input type="button" id="btnsave" value="Save"/>
-    <input type="text" id="saved_item"></input>
+
 </div>
-<div id="nestable"></div>
+
 
 </body>
 </html>
